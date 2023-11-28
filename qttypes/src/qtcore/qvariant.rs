@@ -31,10 +31,40 @@ impl QVariant {
     /// Wrapper around [`toDouble()`][method] method.
     ///
     /// [method]: https://doc.qt.io/qt-5/qvariant.html#toDouble
-    pub fn to_double(&self) -> f64 {
-        cpp!(unsafe [self as "const QVariant*"] -> f64 as "double" {
-            return self->toDouble();
-        })
+    pub fn to_double(&self) -> Result<f64, ()> {
+        let mut ok = false;
+
+        let value = cpp!(unsafe [self as "const QVariant*", mut ok as "bool"] -> f64 as "double" {
+            return self->toDouble(&ok);
+        });
+
+        if ok { Ok(value) } else { Err(()) }
+    }
+
+    /// Wrapper around [`toInt()`][method] method.
+    ///
+    /// [method]: https://doc.qt.io/qt-5/qvariant.html#toInt
+    pub fn to_int(&self) -> Result<i32, ()> {
+        let mut ok = false;
+
+        let value = cpp!(unsafe [self as "const QVariant*", mut ok as "bool"] -> i32 as "int32_t" {
+            return int32_t(self->toInt(&ok));
+        });
+
+        if ok { Ok(value) } else { Err(()) }
+    }
+
+    /// Wrapper around [`toLongLong()`][method] method.
+    ///
+    /// [method]: https://doc.qt.io/qt-5/qvariant.html#toLongLong
+    pub fn to_longlong(&self) -> Result<i64, ()> {
+        let mut ok = false;
+
+        let value = cpp!(unsafe [self as "const QVariant*", mut ok as "bool"] -> i64 as "int64_t" {
+            return self->toLongLong(&ok);
+        });
+
+        if ok { Ok(value) } else { Err(()) }
     }
 
     /// Wrapper around [`toMap()`][method] method.
