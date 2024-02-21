@@ -46,6 +46,8 @@ pub trait QAbstractListModel: QObject {
     fn set_data(&mut self, _index: QModelIndex, _value: &QVariant, _role: i32) -> bool {
         false
     }
+    /// Refer to the Qt documentation of QAbstractListModel::flags
+    fn flags(&self, _index: QModelIndex) -> u32 { return 1 | 32 } // Qt::ItemIsSelectable | Qt::ItemIsEnabled
     /// Refer to the Qt documentation of QAbstractListModel::roleNames
     fn role_names(&self) -> HashMap<i32, QByteArray> {
         HashMap::new()
@@ -195,7 +197,12 @@ cpp! {{
             });
         }
 
-        //Qt::ItemFlags flags(const QModelIndex &index) const override;
+        Qt::ItemFlags flags(const QModelIndex &index) const override {
+            return rust!(Rust_QAbstractListModel_flags[rust_object : QObjectPinned<dyn QAbstractListModel> as "TraitObject",
+                    index : QModelIndex as "QModelIndex"] -> u32 as "Qt::ItemFlags" {
+                rust_object.borrow().flags(index)
+            });
+        }
 
         //QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
