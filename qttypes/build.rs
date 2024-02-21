@@ -197,9 +197,12 @@ fn main() {
     println!("cargo:FOUND=1");
     println!("cargo:COMPILE_FLAGS={}", flags.join(";"));
 
-    let macos_lib_search = if cargo_target_os == "macos" { "=framework" } else { "" };
+    let use_macos_frameworks =
+        cargo_target_os == "macos" && Path::new(&qt_library_path).join("QtCore.framework").exists();
+
+    let macos_lib_search = if use_macos_frameworks { "=framework" } else { "" };
     let vers_suffix =
-        if cargo_target_os == "macos" { "".to_string() } else { qt_version.major.to_string() };
+        if use_macos_frameworks { "".to_string() } else { qt_version.major.to_string() };
 
     // Windows debug suffix exclusively from MSVC land
     let debug = std::env::var("DEBUG").ok().map_or(false, |s| s == "true");
@@ -211,6 +214,15 @@ fn main() {
             ""
         };
 
+    // MinGW and MSVC are not compatible
+    if cargo_target_os == "windows" {
+        let spec = qmake_query("QMAKE_SPEC");
+        if (spec.contains("msvc") && cargo_target_env == "gnu")
+            || (spec.contains("g++") && cargo_target_env == "msvc")
+        {
+            report_error(&format!("Rust target '{}' is not compatible with Qt mkspec '{spec}'. Mixing MinGW and MSVC is not allowed.", std::env::var_os("TARGET").unwrap_or_default().to_string_lossy()));
+        }
+    }
     if std::env::var("CARGO_CFG_TARGET_FAMILY").as_ref().map(|s| s.as_ref()) == Ok("unix") {
         println!("cargo:rustc-cdylib-link-arg=-Wl,-rpath,{}", &qt_library_path);
     }
