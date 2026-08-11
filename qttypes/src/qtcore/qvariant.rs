@@ -123,8 +123,8 @@ impl QVariant {
     /// Wrapper around [`toInt()`][method] method.
     ///
     /// [method]: https://doc.qt.io/qt-5/qvariant.html#toInt
-    pub fn to_int(&self) -> u32 {
-        cpp!(unsafe [self as "const QVariant*"] -> u32 as "int" {
+    pub fn to_int(&self) -> i32 {
+        cpp!(unsafe [self as "const QVariant*"] -> i32 as "int" {
             return self->toInt();
         })
     }
