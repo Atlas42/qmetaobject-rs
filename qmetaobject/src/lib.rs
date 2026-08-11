@@ -151,8 +151,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #![recursion_limit = "10240"]
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::needless_pass_by_value))] // Too many of that for qt types. (FIXME)
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::cognitive_complexity))]
+#![allow(clippy::needless_pass_by_value)] // Too many of that for qt types. (FIXME)
+#![allow(clippy::cognitive_complexity)]
 
 #[doc(hidden)]
 pub use qmetaobject_impl::{qrc_internal, SimpleListItem};
@@ -426,7 +426,7 @@ impl<T: QObject + ?Sized> QPointer<T> {
 
 impl<T: QObject> QPointer<T> {
     /// Returns a pinned reference to the QObject, or None if it was deleted
-    pub fn as_pinned(&self) -> Option<QObjectPinned<T>> {
+    pub fn as_pinned(&self) -> Option<QObjectPinned<'_, T>> {
         let x = self.cpp_ptr();
         if x.is_null() {
             None
@@ -511,11 +511,11 @@ impl<'pin, T: QObject + ?Sized + 'pin> QObjectPinned<'pin, T> {
     /// Borrow the object
     // FIXME: there are too many cases for which we want reentrance after borrowing
     //pub fn borrow(&self) -> std::cell::Ref<T> { self.0.borrow() }
-    #[cfg_attr(feature = "cargo-clippy", allow(clippy::should_implement_trait))]
+    #[allow(clippy::should_implement_trait)]
     pub fn borrow(&self) -> &T {
         unsafe { &*self.0.as_ptr() }
     }
-    pub fn borrow_mut(&self) -> QObjectRefMut<T> {
+    pub fn borrow_mut(&self) -> QObjectRefMut<'_, T> {
         let x = self.0.borrow_mut();
         QObjectRefMut { old_value: x.get_cpp_object(), inner: x }
     }
@@ -569,7 +569,7 @@ impl<T: QObject + Default> Default for QObjectBox<T> {
 }
 
 impl<T: QObject + ?Sized> QObjectBox<T> {
-    pub fn pinned(&self) -> QObjectPinned<T> {
+    pub fn pinned(&self) -> QObjectPinned<'_, T> {
         unsafe { QObjectPinned::new(&self.0) }
     }
 }
@@ -583,7 +583,7 @@ impl<T: QObject + ?Sized> QObjectBox<T> {
 pub fn into_leaked_cpp_ptr<T: QObject>(obj: T) -> *mut c_void {
     let b = Box::new(RefCell::new(obj));
     let obj_ptr = unsafe { QObject::cpp_construct(&b) };
-    Box::into_raw(b);
+    let _ = Box::into_raw(b);
     obj_ptr
 }
 

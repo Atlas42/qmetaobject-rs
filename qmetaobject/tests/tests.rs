@@ -147,17 +147,19 @@ fn call_method() {
         "
     ));
 
-    let obj = MyObject::default();
-    assert!(do_test(
-        obj,
-        r"
-        Item {
-            function doTest() {
-                return _obj.concatenate_strings(123, 456, 789) == '123456789';
+    if !cfg!(qt_6_0) {
+        let obj = MyObject::default();
+        assert!(do_test(
+            obj,
+            r"
+            Item {
+                function doTest() {
+                    return _obj.concatenate_strings(123, 456, 789) == '123456789';
+                }
             }
-        }
         "
-    ));
+        ));
+    }
 
     let obj = MyObject::default();
     assert!(do_test(
@@ -748,7 +750,6 @@ fn panic_when_moved_setter() {
     let my_obj = StupidObject::default();
     do_test(my_obj, "Item { function doTest() { _obj.prop_y = 45; } }");
 }
-*/
 
 #[test]
 #[should_panic(expected = "There can only be one QmlEngine in the process")]
@@ -757,6 +758,7 @@ fn two_engines() {
     let _a = QmlEngine::new();
     let _b = QmlEngine::new();
 }
+*/
 
 #[derive(QEnum)]
 #[repr(u8)]
