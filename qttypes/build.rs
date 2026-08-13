@@ -209,9 +209,8 @@ fn main() {
 
     // Windows debug suffix exclusively from MSVC land
     let debug = std::env::var("DEBUG").ok().map_or(false, |s| s == "true");
-    let windows_dbg_suffix =
+    let dbg_suffix =
         if debug && (cargo_target_os == "windows") && (cargo_target_env == "msvc") {
-            println!("cargo:rustc-link-lib=msvcrtd");
             "d"
         } else {
             ""
@@ -238,7 +237,7 @@ fn main() {
             search = macos_lib_search,
             vers = vers_suffix,
             lib = lib,
-            suffix = windows_dbg_suffix
+            suffix = dbg_suffix
         )
     };
     link_lib("Core");
