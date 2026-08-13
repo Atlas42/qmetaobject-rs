@@ -207,6 +207,16 @@ fn main() {
     let vers_suffix =
         if use_macos_frameworks { "".to_string() } else { qt_version.major.to_string() };
 
+    // Windows debug suffix exclusively from MSVC land
+    let debug = std::env::var("DEBUG").ok().map_or(false, |s| s == "true");
+    let windows_dbg_suffix =
+        if debug && (cargo_target_os == "windows") && (cargo_target_env == "msvc") {
+            println!("cargo:rustc-link-lib=msvcrtd");
+            "d"
+        } else {
+            ""
+        };
+
     // MinGW and MSVC are not compatible
     if cargo_target_os == "windows" {
         let spec = qmake_query("QMAKE_SPEC");
@@ -224,10 +234,11 @@ fn main() {
 
     let link_lib = |lib: &str| {
         println!(
-            "cargo:rustc-link-lib{search}=Qt{vers}{lib}",
+            "cargo:rustc-link-lib{search}=Qt{vers}{lib}{suffix}",
             search = macos_lib_search,
             vers = vers_suffix,
-            lib = lib
+            lib = lib,
+            suffix = windows_dbg_suffix
         )
     };
     link_lib("Core");
